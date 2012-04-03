@@ -10,8 +10,8 @@ import com.vividsolutions.jts.geom.Point;
 
 
 public class ShapeFileContainer {
-	List<String> types = new ArrayList<String>();
-	List<Column> columns = new ArrayList<Column>();
+	List<Class<?>> types = new ArrayList<>();
+	List<Column> columns = new ArrayList<>();
 	
 	
 	public void addColumn(Class<?> type,String name){

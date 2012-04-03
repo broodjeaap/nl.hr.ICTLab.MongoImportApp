@@ -16,15 +16,14 @@ public class Main {
 
 
     public static void main(String[] args) throws Exception {
-    	System.out.println();
-        // display a data store file chooser dialog for shapefiles
-        File file = new File("D:\\School\\ICTLab\\gemeentewerken\\GW-Objecten\\speeltoestellen\\speeltoestellen.shp");
+        File file = new File("D:\\School\\ICTLab\\gemeentewerken\\GW-Diverse\\speeltoestellen\\speeltoestellen.shp");
         //File file = JFileDataStoreChooser.showOpenFile("shp", null);
-        //JFileDataStoreChooser.showOpenFile("shp", null);
         FileDataStore store = FileDataStoreFinder.getDataStore(file);
         FeatureReader<SimpleFeatureType, SimpleFeature> fr = store.getFeatureReader();
         
-        SimpleFeature sf;
+        
+        
+        /*
         sf = fr.next();
         SimpleFeatureType ft = sf.getFeatureType();
         ShapeFileContainer sfc = new ShapeFileContainer();
@@ -32,23 +31,18 @@ public class Main {
         for(int a = 0;a < ft.getAttributeCount();++a){
         	sfc.addColumn(ft.getDescriptor(a).getType().getBinding(),ft.getDescriptor(a).getLocalName());
         }
-        System.out.println("done");
-        System.out.print("Loading shapefile...");
-        fr = store.getFeatureReader();
-        for(;fr.hasNext();){
-        	sf = fr.next();
-        	for(int a = 0;a < sf.getAttributeCount();++a){
-        		sfc.add(a,sf.getAttribute(a));
-        	}
-        }
-        System.out.println("done");
-        System.out.print("writing to file...");
+        */
+        
         try{
         	  FileWriter fstream = new FileWriter(file.getName().substring(0,file.getName().indexOf("."))+".json");
         	  BufferedWriter out = new BufferedWriter(fstream);
-        	  //out.write(sfc.toJson());
-        	  sfc.toJson(out);
-        	  out.close();
+        	  JsonWriter jw = new JsonWriter(out);
+        	  jw.start();
+              fr = store.getFeatureReader();
+              for(;fr.hasNext();){
+              	jw.writeFeature(fr.next(),!fr.hasNext());
+              }
+              jw.end();
         	  }	catch (Exception e){
         		  System.err.println("Error: " + e.getMessage());
         }
