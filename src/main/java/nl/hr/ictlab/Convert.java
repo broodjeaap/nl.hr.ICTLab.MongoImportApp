@@ -166,14 +166,14 @@ public class Convert
 		return tmp.replace(start-1,end+1,convertm(tmp.substring(start,end)).toString()).toString();
 	}
 	
-	public static Point convertm(String s){ //UTM -> lng/lat functie van http://www.gpscoordinaten.nl/beta/converteer-rd-coordinaten.php
+	public static double[] convertm(String s){ //UTM -> lng/lat functie van http://www.gpscoordinaten.nl/beta/converteer-rd-coordinaten.php
 		s = s.replaceAll(" ","");
 		float x = Float.valueOf(s.substring(0,s.indexOf(",")));
 		float y = Float.valueOf(s.substring(s.indexOf(",")+1,s.length()));
 		return convertm(x,y);
 	}
-	public static Point convertm(double x,double y) { //UTM -> lng/lat functie van http://www.gpscoordinaten.nl/beta/converteer-rd-coordinaten.php
-		return new Point(RD2lng(x,y),RD2lat(x,y));
+	public static double[] convertm(double x,double y) { //UTM -> lng/lat functie van http://www.gpscoordinaten.nl/beta/converteer-rd-coordinaten.php
+		return new double[] {RD2lng(x,y),RD2lat(x,y)};
 	}
 	
 	public static String convertmString(double x, double y){

@@ -1,27 +1,20 @@
 package nl.hr.ictlab;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import nl.hr.ictlab.ShapeFileContainer;
-
-import org.geotools.data.FeatureReader;
-import org.geotools.data.FileDataStore;
-import org.geotools.data.FileDataStoreFinder;
 import org.geotools.swing.data.JFileDataStoreChooser;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 
 public class Main {
 
 
     public static void main(String[] args) throws Exception {
-        File file = new File("D:\\School\\ICTLab\\gemeentewerken\\GW-Diverse\\speeltoestellen\\speeltoestellen.shp");
-        //File file = JFileDataStoreChooser.showOpenFile("shp", null);
-        FileDataStore store = FileDataStoreFinder.getDataStore(file);
-        FeatureReader<SimpleFeatureType, SimpleFeature> fr = store.getFeatureReader();
-        
-        
+        //File file = new File("D:\\School\\ICTLab\\gemeentewerken\\GW-Objecten\\speeltoestellen\\speeltoestellen.shp");
+        File file = JFileDataStoreChooser.showOpenFile("shp", null);
+        //FileDataStore store = FileDataStoreFinder.getDataStore(file);
+        //FeatureReader<SimpleFeatureType, SimpleFeature> fr = store.getFeatureReader();
+        MongoDBWriter dbWriter = new MongoDBWriter("ICTLab");
+        System.out.print("Starting...");
+        dbWriter.fromShapeFile(file);
+        System.out.println("Done");
         
         /*
         sf = fr.next();
@@ -31,7 +24,6 @@ public class Main {
         for(int a = 0;a < ft.getAttributeCount();++a){
         	sfc.addColumn(ft.getDescriptor(a).getType().getBinding(),ft.getDescriptor(a).getLocalName());
         }
-        */
         
         try{
         	  FileWriter fstream = new FileWriter(file.getName().substring(0,file.getName().indexOf("."))+".json");
@@ -47,6 +39,7 @@ public class Main {
         		  System.err.println("Error: " + e.getMessage());
         }
         System.out.println("done");
+         */
         //System.out.println(sfc.rangeToJson(0,10));
     }
 }

@@ -2,7 +2,6 @@ package nl.hr.ictlab;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
