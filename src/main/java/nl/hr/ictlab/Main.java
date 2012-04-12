@@ -1,22 +1,31 @@
 package nl.hr.ictlab;
 
 import java.io.File;
+
 import org.geotools.swing.data.JFileDataStoreChooser;
+
+import nl.hr.ictlab.gui.ColumnOverview;
 
 public class Main {
 
 
-    public static void main(String[] args) throws Exception {
-        //File file = new File("D:\\School\\ICTLab\\gemeentewerken\\GW-Objecten\\speeltoestellen\\speeltoestellen.shp");
+    public static void main(String[] args) throws Exception {  
+        
+    	javax.swing.SwingUtilities.invokeLater(new ColumnOverview());
+    	/*
+    	//File file = new File("D:\\School\\ICTLab\\gemeentewerken\\GW-Objecten\\speeltoestellen\\speeltoestellen.shp");
         File file = JFileDataStoreChooser.showOpenFile("shp", null);
         //FileDataStore store = FileDataStoreFinder.getDataStore(file);
         //FeatureReader<SimpleFeatureType, SimpleFeature> fr = store.getFeatureReader();
+        
+        
         MongoDBWriter dbWriter = new MongoDBWriter("ICTLab");
         System.out.print("Starting...");
         dbWriter.fromShapeFile(file);
         System.out.println("Done");
         
-        /*
+        
+        
         sf = fr.next();
         SimpleFeatureType ft = sf.getFeatureType();
         ShapeFileContainer sfc = new ShapeFileContainer();

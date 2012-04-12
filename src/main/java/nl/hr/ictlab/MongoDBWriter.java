@@ -1,11 +1,8 @@
 package nl.hr.ictlab;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.Set;
-
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FileDataStore;
 import org.geotools.data.FileDataStoreFinder;
@@ -16,8 +13,6 @@ import com.mongodb.Mongo;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.DBCursor;
 import com.mongodb.MongoException;
 import com.vividsolutions.jts.geom.Point;
 
@@ -25,8 +20,7 @@ public class MongoDBWriter {
 	Mongo m;
 	DB db;
 	public MongoDBWriter(String dbName) throws UnknownHostException, MongoException{
-		m = new Mongo( "localhost" , 27017 );
-		
+		m = new Mongo("localhost",27017);
 		db = m.getDB(dbName);
 	}
 	
