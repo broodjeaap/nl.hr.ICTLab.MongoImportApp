@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -24,6 +25,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -45,72 +48,118 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 	
 	
 	
-	private JList<AbstractColumn> columns;
-	private DefaultListModel<AbstractColumn> columnListModel;
+	private JList<AbstractColumn> enabledColumns;
+	private DefaultListModel<AbstractColumn> enabledColumnListModel;
+	private JList<AbstractColumn> disabledColumns;
+	private DefaultListModel<AbstractColumn> disabledColumnListModel;
+	private JButton toEnabled;
+	private JButton toDisabled;
+	private JButton allToEnabled;
+	private JButton allToDisabled;
+	
+	private JPanel columnPanel;
 	private JCheckBox columnEnabled;
 	private JCheckBox columnAvailable;
 	private JComboBox<ColumnType> columnType;
 	private JTextField columnName;
-
-	private JList<String> columnSampleJList;
-	private DefaultListModel<String> columnSampleListModel;
-	private JList<String> columnUniqueJlist;
-	private DefaultListModel<String> columnUniqueListModel;
+	
 	private RangePanel rangePanel;
 	private SelectionPanel selectionPanel;
+	private NonePanel nonePanel;
 	
 	private File currentShapeFile;
 	
+	private AbstractColumn selectedColumn = null;
+	
 	public ColumnOverview(){
 		super(new BorderLayout());
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		JMenuBar menuBar = new JMenuBar();
 		JMenu menu = new JMenu("File");
 		menu.getAccessibleContext().setAccessibleDescription("Open");
 		menuBar.add(menu);
 		
-		//ColumnList
-		JPanel columnListPanel = new JPanel(new GridLayout());
+		//Columns
+		JPanel columnListPanel = new JPanel(new BorderLayout());
 		columnListPanel.setBorder(BorderFactory.createTitledBorder("Columns"));
-		columnListModel = new DefaultListModel<>();		
-		columns = new JList<>(columnListModel);
-		columns.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		columns.addListSelectionListener(this);
 		
-		//Scroller for ColumnList
-		JScrollPane columnScroller = new JScrollPane(columns);
-		columnScroller.setPreferredSize(new Dimension(150,400));
-		columnListPanel.add(columnScroller);
+		//enabledColumns
+		enabledColumnListModel = new DefaultListModel<>();		
+		enabledColumns = new JList<>(enabledColumnListModel);
+		enabledColumns.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+
+		//Scroller for enabledColumns
+		JScrollPane enabledColumnScroller = new JScrollPane(enabledColumns);
+		enabledColumnScroller.setPreferredSize(new Dimension(150,400));
+		columnListPanel.add(enabledColumnScroller,BorderLayout.EAST);
+		enabledColumnScroller.setBorder(BorderFactory.createTitledBorder("Enabled"));
+		
+		//buttons for moving columns between the enabled/disabled lists
+		allToEnabled = new JButton(">>>");
+		toEnabled = new JButton(">");
+		toDisabled = new JButton("<");
+		allToDisabled = new JButton("<<<");
+		
+		//Panel that holds the buttons
+		JPanel columnButtons = new JPanel(new GridLayout(10,0));
+		columnButtons.add(new JLabel(" "));
+		columnButtons.add(new JLabel(" "));
+		columnButtons.add(new JLabel(" "));
+		columnButtons.add(allToEnabled);
+		columnButtons.add(toEnabled);
+		columnButtons.add(toDisabled);
+		columnButtons.add(allToDisabled);
+		columnButtons.add(new JLabel(" "));
+		columnButtons.add(new JLabel(" "));
+		columnButtons.add(new JLabel(" "));
+		columnListPanel.add(columnButtons,BorderLayout.CENTER);
+		
+		//disabledColumns
+		disabledColumnListModel = new DefaultListModel<>();
+		disabledColumns = new JList<>(disabledColumnListModel);
+		disabledColumns.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		//Scroller for disabledColumns
+		JScrollPane disabledColumnScroller = new JScrollPane(disabledColumns);
+		disabledColumnScroller.setPreferredSize(new Dimension(150,400));
+		columnListPanel.add(disabledColumnScroller,BorderLayout.WEST);
+		disabledColumnScroller.setBorder(BorderFactory.createTitledBorder("Disabled"));
 		
 		//ColumnPanel, displays all the information/options for a column
-		JPanel columnPanel = new JPanel(new BorderLayout());
+		columnPanel = new JPanel(new BorderLayout());
 		columnPanel.setBorder(BorderFactory.createTitledBorder("Column settings"));
 		
 		//ColumnOptionsPanel, displays the enabled/disabled checkbox and name of the column
 		JPanel columnOptionsPanel = new JPanel(new FlowLayout());
 		columnOptionsPanel.setBorder(BorderFactory.createTitledBorder("General"));
 		
-		//Panel wrapping around the enabled/disabled checkbox
-		JPanel columnOptionEnabledPanel = new JPanel();
-		columnEnabled = new JCheckBox();
-		columnEnabled.addActionListener(this);
-		columnOptionEnabledPanel.add(new JLabel("Enabled: "));
-		columnOptionEnabledPanel.add(columnEnabled);
-		columnOptionsPanel.add(columnOptionEnabledPanel);
-		
 		//Panel wrapping around the available checkbox
 		JPanel columnOptionAvailable = new JPanel();
 		columnAvailable = new JCheckBox();
-		columnAvailable.addActionListener(this);
 		columnOptionAvailable.add(new JLabel("Available: "));
 		columnOptionAvailable.add(columnAvailable);
 		columnOptionsPanel.add(columnOptionAvailable);
 		
 		//Panel wrapping around the type dropdown
 		JPanel columnOptionTypePanel = new JPanel();
-		columnType = new JComboBox<>(ColumnType.values());
-		columnType.addActionListener(this);
 		columnOptionTypePanel.add(new JLabel("Type: "));
+		columnType = new JComboBox<>(ColumnType.values());
 		columnOptionTypePanel.add(columnType);
 		columnOptionsPanel.add(columnOptionTypePanel);
 		
@@ -118,44 +167,31 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 		JPanel columnOptionNamePanel = new JPanel();
 		columnName = new JTextField();
 		columnName.setColumns(15);
-		columnName.addActionListener(this);
 		columnOptionNamePanel.add(new JLabel("Name: "));
 		columnOptionNamePanel.add(columnName);
 		columnOptionsPanel.add(columnOptionNamePanel);
 		columnPanel.add(columnOptionsPanel,BorderLayout.NORTH);
+		
+		
 		//Panel that wraps the type and sample panels
 		JPanel columnSamplePanel = new JPanel();
 		columnSamplePanel.setBorder(BorderFactory.createTitledBorder("Sample Data"));
 		
-		columnSampleListModel = new DefaultListModel<>();
-		columnSampleJList = new JList<>(columnSampleListModel);
-		columnSampleJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		JScrollPane sampleScroller = new JScrollPane(columnSampleJList);
-		sampleScroller.setPreferredSize(new Dimension(200,480));
-		columnSamplePanel.add(sampleScroller);
-		columnPanel.add(columnSamplePanel,BorderLayout.WEST);
-		
-		
-		//Panel that displays the specifiek options available to a column (based on the type)
-		JPanel columnTypePanel = new JPanel(new BorderLayout());
-		columnTypePanel.setBorder(BorderFactory.createTitledBorder("Type Settings"));
-		columnPanel.add(columnTypePanel,BorderLayout.CENTER);
-		
-		//Panel that wraps the unique values list
-		JPanel columnUniqueValuePanel = new JPanel();
-		columnUniqueValuePanel.setBorder(BorderFactory.createTitledBorder("Unique Values"));
-		columnUniqueListModel = new DefaultListModel<>();
-		columnUniqueJlist = new JList<>(columnUniqueListModel);
-		columnUniqueJlist.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		JScrollPane uniqueScroller = new JScrollPane(columnUniqueJlist);
-		uniqueScroller.setPreferredSize(new Dimension(200,450));
-		columnUniqueValuePanel.add(uniqueScroller,BorderLayout.WEST);
-		columnTypePanel.add(columnUniqueValuePanel,BorderLayout.WEST);
-		rangePanel = new RangePanel();
-		selectionPanel = new SelectionPanel();
-		columnPanel.add(selectionPanel);
-		
-		this.add(columnPanel);
+		rangePanel = new RangePanel(selectedColumn);
+		selectionPanel = new SelectionPanel(selectedColumn);
+		nonePanel = new NonePanel();
+		//columnPanel.add(selectionPanel,BorderLayout.LINE_START);
+
+		columnName.addActionListener(this);
+		enabledColumns.addListSelectionListener(this);
+		allToEnabled.addActionListener(this);
+		toEnabled.addActionListener(this);
+		toDisabled.addActionListener(this);
+		allToDisabled.addActionListener(this);
+		disabledColumns.addListSelectionListener(this);
+		columnAvailable.addActionListener(this);
+		columnType.addActionListener(this);
+		this.add(columnPanel,BorderLayout.CENTER);
 		this.add(columnListPanel,BorderLayout.WEST);
 	}
 	
@@ -182,11 +218,13 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 				| IOException e) {
 			e.printStackTrace();
 		}
-		columns.setSelectedIndex(0);
+		selectedColumn = enabledColumnListModel.get(0);
+		enabledColumns.setSelectedIndex(0);
+		
 		frame.setJMenuBar(menuBar);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setOpaque(true);
-		this.setPreferredSize(new Dimension(800,600));
+		this.setPreferredSize(new Dimension(1024,756));
 		frame.setContentPane(this);
 		frame.pack();
 		frame.setVisible(true);
@@ -195,7 +233,7 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 	private void processShapeFile(File file) throws IllegalArgumentException, NoSuchElementException, IOException{
 		FileDataStore store = FileDataStoreFinder.getDataStore(file);
 		FeatureReader<SimpleFeatureType, SimpleFeature> fr = store.getFeatureReader();
-		columnListModel.clear();
+		enabledColumnListModel.clear();
 		SimpleFeature sf = fr.next();
 		SimpleFeatureType ft = sf.getFeatureType();
 		boolean succes = true;
@@ -206,25 +244,13 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 				succes = false;
 				break;
 			}
-			columnListModel.addElement(column);
+			enabledColumnListModel.addElement(column);
 		}
 		if(!succes){
 			System.out.println("Something went wrong, please retry or select another shapefile");
-			columnListModel.clear();
+			enabledColumnListModel.clear();
 		} else {
-			//Fill column sample data
-			fr = store.getFeatureReader(); 
-			int count = 0;
-			List<AbstractColumn> list = Exporter.minimize(columnListModel);
-			while(fr.hasNext() && count++ < 100){
-				sf = fr.next();
-				for(AbstractColumn ac : list){
-					ac.addSample(sf.getAttribute(ac.getIndex()).toString());
-					if(fr.hasNext()){
-						fr.next(); //provides more 'random' data
-					}
-				}
-			}
+			List<AbstractColumn> list = Exporter.minimize(enabledColumnListModel);
 			//Pre-process the shapefile
 			fr = store.getFeatureReader();
 			String tmp = null;
@@ -243,11 +269,13 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 	@Override
 	public void actionPerformed(ActionEvent event) {
 		if(event.getSource()==columnEnabled){ //enable/disable checkbox
-			columnListModel.get(columns.getSelectedIndex()).setEnabled(columnEnabled.isSelected());
+			selectedColumn.setEnabled(columnEnabled.isSelected());
 		} else if(event.getSource()==columnAvailable){ //available checkbox
-			columnListModel.get(columns.getSelectedIndex()).setAvailable(columnAvailable.isSelected());
+			selectedColumn.setAvailable(columnAvailable.isSelected());
 		} else if(event.getSource()==columnType){ //column type dropdown list
-			columnListModel.get(columns.getSelectedIndex()).setType(columnType.getItemAt(columnType.getSelectedIndex()));
+			removeColumnTypePanel();
+			selectedColumn.setType(columnType.getItemAt(columnType.getSelectedIndex()));
+			setColumnTypePanel();
 		} else if(event.getSource()==menuItemOpen){ //File > Open
 			currentShapeFile = JFileDataStoreChooser.showOpenFile("shp", null); 
 			try {
@@ -261,36 +289,91 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 			}
 		} else if (event.getSource()==menuItemMongoDB){ // Export > Mongo
 			try {
-				Exporter.toMongo(columnListModel, currentShapeFile, "ICTLab");
+				Exporter.toMongo(enabledColumnListModel, currentShapeFile, "ICTLab");
 			} catch (MongoException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else if (event.getSource()==columnName){ //Name change textfield
-			columnListModel.get(columns.getSelectedIndex()).setName(columnName.getText());
-			columns.repaint();
+			enabledColumnListModel.get(enabledColumns.getSelectedIndex()).setName(columnName.getText());
+			enabledColumns.repaint();
+		} else if (event.getSource()==allToEnabled){ //move all items to the enabled column
+			for(int a = disabledColumnListModel.size()-1;a >= 0;--a){
+				enabledColumnListModel.addElement(disabledColumnListModel.get(a));
+				disabledColumnListModel.remove(a);
+			}
+		} else if (event.getSource()==toEnabled){ //move the selected item to the enabled column
+			enabledColumnListModel.addElement(disabledColumnListModel.get(disabledColumns.getSelectedIndex()));
+			disabledColumnListModel.remove(disabledColumns.getSelectedIndex());
+			selectedColumn.setEnabled(true);
+		} else if (event.getSource()==toDisabled){ //move the selected item to the disabled column
+			disabledColumnListModel.addElement(enabledColumnListModel.get(enabledColumns.getSelectedIndex()));
+			enabledColumnListModel.remove(enabledColumns.getSelectedIndex());
+			selectedColumn.setEnabled(false);
+		} else if (event.getSource()==allToDisabled){ //move all the items to the disabled column
+			for(int a = enabledColumnListModel.size()-1;a >= 0;--a){
+				disabledColumnListModel.addElement(enabledColumnListModel.get(a));
+				enabledColumnListModel.remove(a);
+			}
 		}
+	}
+	
+	private JPanel getColumnTypePanel(ColumnType type){
+		switch(type){
+			case Range:{
+				return rangePanel;
+			}
+			case Selection:{
+				return selectionPanel;
+			}
+			case None:{
+				return nonePanel;
+			}
+			default:
+				return nonePanel;
+		}
+	}
+	
+	private void removeColumnTypePanel(){
+		ColumnType type = selectedColumn.getType();
+		JPanel ac = getColumnTypePanel(type);
+		columnPanel.remove(ac);
+	}
+	
+	private void setColumnTypePanel(){
+		columnPanel.add(getColumnTypePanel(selectedColumn.getType()),BorderLayout.CENTER);
+		rangePanel.setColumn(selectedColumn);
+		selectionPanel.setColumn(selectedColumn);
+		rangePanel.setUniqueValues();
+		columnPanel.validate();
+		this.repaint();
 	}
 	
 	@Override
 	public void valueChanged(ListSelectionEvent event) {
-		if(!event.getValueIsAdjusting() && (columns.getSelectedIndex() >= 0)){
-			AbstractColumn column = columnListModel.get(columns.getSelectedIndex());
-			columnEnabled.setSelected(column.isEnabled());
-			columnName.setText(column.getName());
-			columnAvailable.setSelected(column.isAvailable());
-			columnType.setSelectedItem(column.getType());
-			columnSampleListModel.clear();
-			for(String s : columnListModel.get(columns.getSelectedIndex()).getSampleData()){
-				columnSampleListModel.addElement(s);
+		if(!event.getValueIsAdjusting()){
+			if(event.getSource() == enabledColumns && enabledColumns.getSelectedIndex() >= 0){
+				removeColumnTypePanel();
+				selectedColumn = enabledColumnListModel.get(enabledColumns.getSelectedIndex());
+				columnName.setText(selectedColumn.getName());
+				columnAvailable.setSelected(selectedColumn.isAvailable());
+				columnType.setSelectedItem(selectedColumn.getType());
+				toDisabled.setEnabled(true);
+				toEnabled.setEnabled(false);
+				disabledColumns.clearSelection();
+				setColumnTypePanel();
+			} else if (event.getSource() == disabledColumns && disabledColumns.getSelectedIndex() >= 0){
+				removeColumnTypePanel();
+				selectedColumn = disabledColumnListModel.get(disabledColumns.getSelectedIndex());
+				columnName.setText(selectedColumn.getName());
+				columnAvailable.setSelected(selectedColumn.isAvailable());
+				columnType.setSelectedItem(selectedColumn.getType());
+				toDisabled.setEnabled(false);
+				toEnabled.setEnabled(true);
+				enabledColumns.clearSelection();
+				setColumnTypePanel();	
 			}
-			columnUniqueListModel.clear();
-			for(String s : columnListModel.get(columns.getSelectedIndex()).getUniqueValues()){
-				columnUniqueListModel.addElement(s);
-			}
-			rangePanel.setHighest(columnListModel.get(columns.getSelectedIndex()).getHighest());
-			rangePanel.setLowest(columnListModel.get(columns.getSelectedIndex()).getLowest());
 		}
 	}
 	

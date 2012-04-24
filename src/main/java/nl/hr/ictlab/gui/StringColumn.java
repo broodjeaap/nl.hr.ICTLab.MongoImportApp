@@ -4,9 +4,9 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.mongodb.BasicDBObject;
 
-public class DateColumn extends AbstractColumn {
+public class StringColumn extends AbstractColumn {
 
-	public DateColumn(String name, int index, ColumnType type) {
+	public StringColumn(String name, int index, ColumnType type) {
 		super(name, index, type);
 	}
 

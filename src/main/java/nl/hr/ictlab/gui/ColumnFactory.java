@@ -12,13 +12,13 @@ public class ColumnFactory {
 		if(c == Point.class){
 			column = new PointColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Location);
 		} else if (c == Integer.class) {
-			column = new DefaultColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
+			column = new IntegerColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
 		} else if (c == String.class) {
-			column = new DefaultColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
+			column = new StringColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
 		} else if (c == Long.class) {
-			column = new DefaultColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
+			column = new LongColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
 		} else if (c == Double.class) {
-			column = new DefaultColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
+			column = new DoubleColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
 		}
 		column.setHighest(sf.getAttribute(a).toString());
 		column.setLowest(sf.getAttribute(a).toString());
