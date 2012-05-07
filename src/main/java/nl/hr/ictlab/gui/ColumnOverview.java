@@ -58,8 +58,6 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 	private JButton allToDisabled;
 	
 	private JPanel columnPanel;
-	private JCheckBox columnEnabled;
-	private JCheckBox columnAvailable;
 	private JComboBox<ColumnType> columnType;
 	private JTextField columnName;
 	
@@ -70,6 +68,10 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 	private File currentShapeFile;
 	
 	private AbstractColumn selectedColumn = null;
+	
+	private MongoExportFrame mongoExportFrame;
+	
+	private int rowCount = 0;
 	
 	public ColumnOverview(){
 		super(new BorderLayout());
@@ -149,13 +151,6 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 		JPanel columnOptionsPanel = new JPanel(new FlowLayout());
 		columnOptionsPanel.setBorder(BorderFactory.createTitledBorder("General"));
 		
-		//Panel wrapping around the available checkbox
-		JPanel columnOptionAvailable = new JPanel();
-		columnAvailable = new JCheckBox();
-		columnOptionAvailable.add(new JLabel("Available: "));
-		columnOptionAvailable.add(columnAvailable);
-		columnOptionsPanel.add(columnOptionAvailable);
-		
 		//Panel wrapping around the type dropdown
 		JPanel columnOptionTypePanel = new JPanel();
 		columnOptionTypePanel.add(new JLabel("Type: "));
@@ -189,10 +184,12 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 		toDisabled.addActionListener(this);
 		allToDisabled.addActionListener(this);
 		disabledColumns.addListSelectionListener(this);
-		columnAvailable.addActionListener(this);
 		columnType.addActionListener(this);
 		this.add(columnPanel,BorderLayout.CENTER);
 		this.add(columnListPanel,BorderLayout.WEST);
+		
+		
+		mongoExportFrame = new MongoExportFrame();
 	}
 	
 	private void createAndShowGUI() {
@@ -211,6 +208,7 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 		export.add(menuItemMongoDB);
 		menuBar.add(export);
 		
+		/*
 		try {
 			currentShapeFile = new File("D:\\School\\ICTLab\\gemeentewerken\\GW-Objecten\\speeltoestellen\\speeltoestellen.shp"); 
 			processShapeFile(currentShapeFile);
@@ -218,8 +216,7 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 				| IOException e) {
 			e.printStackTrace();
 		}
-		selectedColumn = enabledColumnListModel.get(0);
-		enabledColumns.setSelectedIndex(0);
+		*/
 		
 		frame.setJMenuBar(menuBar);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -254,6 +251,7 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 			//Pre-process the shapefile
 			fr = store.getFeatureReader();
 			String tmp = null;
+			rowCount = 0;
 			while(fr.hasNext()){
 				sf = fr.next();
 				for(AbstractColumn ac : list){
@@ -262,17 +260,16 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 					ac.newHighest(tmp);
 					ac.newLowest(tmp);
 				}
+				rowCount++;
 			}
+			selectedColumn = enabledColumnListModel.get(0);
+			enabledColumns.setSelectedIndex(0);
 		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		if(event.getSource()==columnEnabled){ //enable/disable checkbox
-			selectedColumn.setEnabled(columnEnabled.isSelected());
-		} else if(event.getSource()==columnAvailable){ //available checkbox
-			selectedColumn.setAvailable(columnAvailable.isSelected());
-		} else if(event.getSource()==columnType){ //column type dropdown list
+		if(event.getSource()==columnType){ //column type dropdown list
 			removeColumnTypePanel();
 			selectedColumn.setType(columnType.getItemAt(columnType.getSelectedIndex()));
 			setColumnTypePanel();
@@ -289,10 +286,11 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 			}
 		} else if (event.getSource()==menuItemMongoDB){ // Export > Mongo
 			try {
-				Exporter.toMongo(enabledColumnListModel, currentShapeFile, "ICTLab");
+				mongoExportFrame.setCollectionName(currentShapeFile);
+				mongoExportFrame.setMaxProgress(rowCount);
+				mongoExportFrame.setColumns(enabledColumnListModel,rowCount);
+				mongoExportFrame.setVisible(true);
 			} catch (MongoException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else if (event.getSource()==columnName){ //Name change textfield
@@ -357,7 +355,6 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 				removeColumnTypePanel();
 				selectedColumn = enabledColumnListModel.get(enabledColumns.getSelectedIndex());
 				columnName.setText(selectedColumn.getName());
-				columnAvailable.setSelected(selectedColumn.isAvailable());
 				columnType.setSelectedItem(selectedColumn.getType());
 				toDisabled.setEnabled(true);
 				toEnabled.setEnabled(false);
@@ -367,7 +364,6 @@ public class ColumnOverview extends JPanel implements Runnable,ActionListener,Li
 				removeColumnTypePanel();
 				selectedColumn = disabledColumnListModel.get(disabledColumns.getSelectedIndex());
 				columnName.setText(selectedColumn.getName());
-				columnAvailable.setSelected(selectedColumn.isAvailable());
 				columnType.setSelectedItem(selectedColumn.getType());
 				toDisabled.setEnabled(false);
 				toEnabled.setEnabled(true);

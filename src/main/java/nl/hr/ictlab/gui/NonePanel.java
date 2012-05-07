@@ -7,6 +7,6 @@ public class NonePanel extends JPanel {
 	private static final long serialVersionUID = 615767411358842270L;
 
 	public NonePanel(){
-		this.add(new JLabel("No type settings necessary for \"None\" type."));
+		this.add(new JLabel("No type settings necessary for type."));
 	}
 }

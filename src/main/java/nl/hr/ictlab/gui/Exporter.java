@@ -22,21 +22,25 @@ import com.mongodb.MongoException;
 public class Exporter {
 	
 	public static void toMongo(DefaultListModel<AbstractColumn> columns,File file,String dbName) throws MongoException, IOException{
-		toMongo(columns,file,dbName,file.getName().substring(0,file.getName().indexOf(".")));
+		//toMongo(columns,file,dbName,file.getName().substring(0,file.getName().indexOf(".")));
 	}
 	
-	public static void toMongo(DefaultListModel<AbstractColumn> columns,File file,String dbName,String collectionName){
+
+	
+	public static void toMongo(String server,int port,String database,String collection, DefaultListModel<AbstractColumn> columns,File file, MongoExportFrame frame){
 		try{
-			Mongo m = new Mongo( "localhost" , 27017 );
-			DB db = m.getDB(dbName);
+			Mongo m = new Mongo( server , port );
+			DB db = m.getDB(database);
 			
 			List<AbstractColumn> list = minimize(columns);
-			DBCollection coll = db.getCollection(collectionName);
+			DBCollection coll = db.getCollection(collection);
 			FileDataStore store = FileDataStoreFinder.getDataStore(file);
 			FeatureReader<SimpleFeatureType, SimpleFeature> sf = store.getFeatureReader();
 			BasicDBObject doc = null;
 			SimpleFeature simpleFeature;
+			int count = 0;
 			while(sf.hasNext()){
+				frame.updateValue(count++);
 				simpleFeature = sf.next();
 				doc = new BasicDBObject();
 				for(AbstractColumn ac : list){
@@ -46,7 +50,7 @@ public class Exporter {
 			}
 			BasicDBObject metaData = new BasicDBObject();
 			coll = db.getCollection("MetaData");
-			metaData.put("name", collectionName);
+			metaData.put("name", collection);
 			for(AbstractColumn ac : list){
 				metaData.put(ac.getName(), getMetaData(ac));
 			}
@@ -62,10 +66,13 @@ public class Exporter {
 			case Selection:{
 				ret.put("type","selection");
 				BasicDBList values = new BasicDBList();
+				BasicDBList variables = new BasicDBList();
 				for(String s : ac.getActiveUniqueValues()){
 					values.add(s);
+					variables.add(s.replaceAll("[^a-zA-Z]", ""));
 				}
 				ret.put("values", values);
+				ret.put("variables", variables);
 				break;
 			}
 			case Range:{

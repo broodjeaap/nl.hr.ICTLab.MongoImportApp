@@ -19,6 +19,8 @@ public class ColumnFactory {
 			column = new LongColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
 		} else if (c == Double.class) {
 			column = new DoubleColumn(ft.getDescriptor(a).getLocalName(),a,ColumnType.Selection);
+		} else {
+			return null;
 		}
 		column.setHighest(sf.getAttribute(a).toString());
 		column.setLowest(sf.getAttribute(a).toString());

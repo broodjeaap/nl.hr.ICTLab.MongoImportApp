@@ -44,6 +44,8 @@ public class RangePanel extends JPanel implements ListSelectionListener{
 		JScrollPane toScroller = new JScrollPane(toList);
 		toScroller.setBorder(BorderFactory.createTitledBorder("To"));
 		highestLowest.add(toScroller,BorderLayout.EAST);
+		toList.addListSelectionListener(this);
+		fromList.addListSelectionListener(this);
 		this.add(highestLowest);
 	}
 	
@@ -57,6 +59,14 @@ public class RangePanel extends JPanel implements ListSelectionListener{
 			fromListModel.addElement(list.get(a));
 			toListModel.addElement(listReverse.get(a));
 		}
+		int from = fromListModel.indexOf(this.column.getLowest());
+		if(from >= 0){
+			fromList.setSelectedIndex(from);
+		}
+		int to = toListModel.indexOf(this.column.getHighest());
+		if(to >= 0){
+			toList.setSelectedIndex(to);
+		}
 	}
 	
 	public void setColumn(AbstractColumn column){
@@ -66,9 +76,9 @@ public class RangePanel extends JPanel implements ListSelectionListener{
 	@Override
 	public void valueChanged(ListSelectionEvent event) {
 		if(!event.getValueIsAdjusting()){
-			if(event.getSource() == fromList){
+			if(event.getSource() == fromList && fromList.getSelectedIndex() >= 0){
 				column.setLowest(fromListModel.get(fromList.getSelectedIndex()));
-			} else if(event.getSource() == toList){
+			} else if(event.getSource() == toList && toList.getSelectedIndex() >= 0){
 				column.setHighest(toListModel.get(toList.getSelectedIndex()));
 			}
 		}
